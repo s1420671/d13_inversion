@@ -1,0 +1,379 @@
+@author: s1420671
+"""
+
+import numpy as np
+from netCDF4 import Dataset
+import os
+import matplotlib.pyplot as plt
+
+#-------------------------------------
+
+# Function to read MR data
+
+#--------------------------------------
+
+def readfile(monthstring):
+    methane_12c= 'out.'+monthstring+'01.nc'
+    fh = Dataset(methane_12c, mode='r')  
+    CH4 = fh.variables['IJ-AVG-S__CH4'][:]
+    fh.close()
+    MR =CH4[0,lat,lon]
+    return MR
+
+
+
+#------------------------------------------------
+
+# Define times, sites and region names
+
+#------------------------------------------------
+
+monthstr = ['jan04','feb04','mar04','apr04','may04','jun04','jul04','aug04','sep04','oct04','nov04','dec04',
+            'jan05','feb05','mar05','apr05','may05','jun05','jul05','aug05','sep05','oct05','nov05','dec05',
+            'jan06','feb06','mar06','apr06','may06','jun06','jul06','aug06','sep06','oct06','nov06','dec06',
+            'jan07','feb07','mar07','apr07','may07','jun07','jul07','aug07','sep07','oct07','nov07','dec07',
+            'jan08','feb08','mar08','apr08','may08','jun08','jul08','aug08','sep08','oct08','nov08','dec08',
+            'jan09','feb09','mar09','apr09','may09','jun09','jul09','aug09','sep09','oct09','nov09','dec09',
+            'jan10','feb10','mar10','apr10','may10','jun10','jul10','aug10','sep10','oct10','nov10','dec10',
+            'jan11','feb11','mar11','apr11','may11','jun11','jul11','aug11','sep11','oct11','nov11','dec11',
+            'jan12','feb12','mar12','apr12','may12','jun12','jul12','aug12','sep12','oct12','nov12','dec12',
+            'jan13','feb13','mar13','apr13','may13','jun13','jul13','aug13','sep13','oct13','nov13','dec13',
+            'jan14','feb14','mar14','apr14','may14','jun14','jul14','aug14','sep14','oct14','nov14','dec14',
+            'jan15','feb15','mar15','apr15','may15','jun15','jul15','aug15','sep15','oct15','nov15','dec15',
+            'jan16','feb16','mar16','apr16','may16','jun16','jul16','aug16','sep16','oct16','nov16','dec16']
+nmonths = len(monthstr)
+
+date = ['200401','200402','200403','200404','200405','200406','200407','200408',
+        '200409','200410','200411','200412','200501','200502','200503','200504',
+        '200505','200506','200507','200508','200509','200510','200511','200512',
+        '200601','200602','200603','200604','200605','200606','200607','200608',
+        '200609','200610','200611','200612','200701','200702','200703','200704',
+        '200705','200706','200707','200708','200709','200710','200711','200712',
+        '200801','200802','200803','200804','200805','200806','200807','200808',
+        '200809','200810','200811','200812','200901','200902','200903','200904',
+        '200905','200906','200907','200908','200909','200910','200911','200912',
+        '201001','201002','201003','201004','201005','201006','201007','201008',
+        '201009','201010','201011','201012','201101','201102','201103','201104',
+        '201105','201106','201107','201108','201109','201110','201111','201112',
+        '201201','201202','201203','201204','201205','201206','201207','201208',
+        '201209','201210','201211','201212','201301','201302','201303','201304',
+        '201305','201306','201307','201308','201309','201310','201311','201312',
+        '201401','201402','201403','201404','201405','201406','201407','201408',
+        '201409','201410','201411','201412','201501','201502','201503','201504',
+        '201505','201506','201507','201508','201509','201510','201611','201512',
+        '201601','201602','201603','201604','201605','201606','201607','201608',
+        '201609','201610','201611','201612']
+
+
+#GEOS-Chem grid boxes that correspond with each NOAA site included 
+site = ['alt','brw','cgo',
+        'kum','mhd','mlo',
+        'nwr','smo','wlg']
+
+
+lati=[43,40,12,27,36,27,33,19,32]
+loni=[23, 5,65, 5,34, 5,15, 2,56]
+
+nsites = len(lati) 
+
+region=['australia','europe','eurasianboreal','eurasiantemperate','northafrica',
+
+        'northamericanboreal','northamericantemperate','southamericantemperate',
+
+        'oceans','southamericantropical','southernafrica','tropicalasia']
+
+nregions = len(region)
+
+
+#------------------------------------------------
+
+# MODEL d13C DATA
+
+#------------------------------------------------
+
+
+# read in perturbed 13CH4 MR and emis data using readfile
+# order: SITE x region x MONTH 
+# size: nsites x nregions x nmonths
+
+MR   = []
+pMR = []
+
+for scount in np.arange(nregions):
+    sec  =region[scount]
+    os.chdir('/geos/d21/s1420671/jacobian/13CH4/14yr/prtbd13/'+sec)
+    
+    for sitecount in np.arange(nsites):
+        lat = lati[sitecount]
+        lon = loni[sitecount]   
+
+        for monthcount in np.arange(nmonths):
+            monthstring = date[monthcount]
+            
+            MRtmp = readfile(str(monthstring))
+            pMR =np.append(pMR,MRtmp)
+
+            
+
+MR=[]
+
+#read in methane 13c data
+for lcount in np.arange(nsites):
+    os.chdir('/geos/d21/s1420671/jacobian/13CH4/14yr/forward/forward/firstset/nTAP20/part1')
+    lat = lati[lcount]
+    lon = loni[lcount]
+    for n in range(len(datei)):
+        methane_13c= 'out.{}01.nc'.format((str(datei[n])))
+        fh = Dataset(methane_13c, mode='r') 
+        D = fh.variables['IJ-AVG-S__CH4'][:]
+        fh.close()
+        MR = np.append(MR, D[0,lat,lon])
+        
+
+
+mix12=[]
+os.chdir('/geos/d21/s1420671/12CH4/forward')
+
+for lcount in np.arange(nsites):
+    lat = lati[lcount]
+    lon = loni[lcount]
+    
+    for n in np.arange(0,len(date),1):
+        methane_12c= 'out.{}01.nc'.format((str(date[n])))
+        fh = Dataset(methane_12c, mode='r')  
+        CH4 = fh.variables['IJ-AVG-S__CH4'][:]
+        fh.close()
+        MixR =CH4[0,lat,lon]
+        mix12 = np.append(mix12, MixR)
+
+
+
+MR=np.tile(MR,12)
+mix12=np.tile(mix12,12)
+
+#------------------
+      
+# SOURCE SIGNATURES
+
+#------------------
+        
+#extract normal source sigs and perturbed source sigs from regiond13 script
+sigdif = (pregionsd13-regionsd13)
+sigdif = np.repeat(sigdif,nsites)
+
+#------------------------------
+
+# JACOBIAN
+
+#-----------------------------
+#make normal and perturbed source d13C values for each site
+
+values = np.zeros(len(MR)) 
+
+normd  = (((MR/mix12)/0.0112372)-1)*1000
+prtbd  = (((pMR/mix12)/0.0112372)-1)*1000
+
+for n in np.arange((len(MR))):
+    outval = (prtbd[n]-normd[n])/sigdif[n]
+    values[n] = outval  
+  
+for l in np.arange(len(values)):
+    if values[l] > 1:
+        values[l]=1
+                
+
+#put jacobian together
+#read out first 12 (region1, site 1)
+#Then skip down 15 rows
+#and move onto next site
+jacobian = np.zeros([nmonths*nsites,nmonths*nregions])
+
+vl=0
+col=0
+mo=0
+
+for sitecount in np.arange(nsites):
+    col = 0
+    row = nmonths*sitecount
+    
+    for sec in np.arange(nregions):
+        col = sec*nmonths
+        row = sitecount*nmonths
+        
+        for month in np.arange(nmonths):
+            jacobian[row,col] = values[vl]
+            
+            vl  += 1
+            col  += 1
+            row += 1
+
+
+#-----------------------
+            
+# REAL DATA
+            
+#-----------------------
+
+mx=[]
+y=[]  
+for siten in np.arange(len(site)):
+    si = site[siten]
+    os.chdir('/home/s1420671/Downloads/13CH4_NOAA_observations')
+    f = open("ch4c13_"+si+"_surface-flask_1_sil_month.txt", "r")
+    for line in f:
+        if '2004' in line:
+           mx = np.append(mx,line)
+        if '2005' in line:
+           mx = np.append(mx,line)
+        if '2006' in line:
+           mx = np.append(mx,line)
+        if '2007 ' in line:
+           mx = np.append(mx,line)
+        if '2008' in line:
+           mx = np.append(mx,line)
+        if '2009' in line:
+           mx = np.append(mx,line)
+        if '2010' in line:
+           mx = np.append(mx,line)
+        if '2011' in line:
+           mx = np.append(mx,line)
+        if '2012' in line:
+           mx = np.append(mx,line)
+        if '2013' in line:
+           mx = np.append(mx,line)
+        if '2014' in line:
+           mx = np.append(mx,line)
+        if '2015' in line:
+            mx=np.append(mx,line)
+        if '2016' in line:
+           mx=np.append(mx,line)
+    f.close
+
+for line in mx:
+    spl = line.split()
+    y = np.append(y, float(spl[3]))
+    
+
+
+#---------------------------
+    
+# MAP SETUP
+    
+#---------------------------
+    
+#xa is prior regional source sigs
+xa = regionsd13
+
+
+#estimates of d13C at each site
+site = normd[0:len(y)]
+
+
+#here, you can change the error in Sa and Se 
+#and construct the errors matrices
+
+
+sa_err = np.square(xa*2)
+se_err = np.square(y*0.2)+2
+
+Sa = np.zeros([nmonths*nregions,nmonths*nregions])
+for ii in np.arange(nmonths*nregions): Sa[ii,ii] = sa_err[ii]
+
+Se = np.zeros([len(y),len(y)])
+for ii in np.arange(len(y)): Se[ii,ii] = se_err[ii]
+
+
+#-----------------------------
+
+# MAP CALCULATION
+
+#-----------------------------
+
+from numpy.linalg import inv
+from numpy.linalg import multi_dot
+
+invse = inv(Se)
+tranjac = np.transpose(jacobian)
+invsa = inv(Sa)
+
+xx = xa + multi_dot([inv(multi_dot([tranjac,invse,jacobian])+invsa),tranjac,invse,(y-site)])
+
+s = inv(multi_dot([tranjac,invse,jacobian])+invsa)
+
+#set up errors from error covariance matrix for post (d)
+#and prior error
+
+err=[]
+
+for errcount in np.arange(nmonths*nregions):
+    err = np.append(err,-np.sqrt(s[errcount,errcount]))    
+err_scale = np.true_divide(err,xx)
+
+for v in np.arange(len(err)):
+    if abs(err[v]) < 5:
+        err[v]=10
+
+pri_err =[]
+
+for pri_count in np.arange(nmonths*nregions):
+    pri_err = np.append(pri_err,np.sqrt(Sa[pri_count,pri_count]))
+
+
+#---------------------------------
+    
+# PLOTTING
+    
+#---------------------------------
+
+
+#plot subplots of posterior estimate
+#on same axes as prior
+#plot errorbars as shaded area
+#write out relative error on posterior
+#store scaling factor to go from prior to posterior source sg
+#to use in a forward run for the NOAA comparison
+
+import pandas as pd
+x = pd.date_range(start='1/1/2004', end='1/1/2017', periods=nmonths)
+#
+scale=[]
+pl=0
+
+fig=plt.figure()
+fig.set_figheight(20)
+fig.set_figwidth(35)
+
+for plot in np.arange(nregions):
+
+    sc =region[plot]
+    plt.subplot(3,4,plot+1)  
+    plt.rc('font', size=20)
+    plt.plot(x,xx[pl:pl+nmonths], x,xa[pl:pl+nmonths])
+    plt.fill_between(x,xx[pl:pl+nmonths]-err[pl:pl+nmonths],
+                     xx[pl:pl+nmonths]+err[pl:pl+nmonths], alpha=0.4, facecolor='#089FFF')
+    plt.fill_between(x,xa[pl:pl+nmonths]-pri_err[pl:pl+nmonths],
+                     xa[pl:pl+nmonths]+pri_err[pl:pl+nmonths], alpha=0.4,facecolor='#FF9848')
+    avgerr = np.around(np.mean(err_scale[pl:pl+nmonths]),decimals=5)
+    avgerr = np.array2string(avgerr)
+    plt.annotate("Avg post error = "+ avgerr, xy=(0.05,0.9), xycoords='axes fraction',fontsize=15)
+    plt.title(sc,fontsize=20)
+    plt.legend(('posterior', 'prior'),prop={'size':15})
+    #plt.ylim(-100,-10)
+    
+    scale[pl:pl+nmonths] = np.around(np.divide(xx[pl:pl+nmonths],xa[pl:pl+nmonths]),decimals=5)
+    
+    if plot == 0:
+        plt.ylabel('d13C',fontsize=40)
+    if plot == 4:
+        plt.ylabel('d13C',fontsize=40)
+    if plot == 8:
+        plt.ylabel('d13C',fontsize=40)
+        plt.xlabel('year',fontsize=20)
+    if plot == 9:
+        plt.xlabel('year',fontsize=20)
+    if plot == 10:
+        plt.xlabel('year',fontsize=20)
+    if plot == 11:
+        plt.xlabel('year',fontsize=20)
+        
+    pl=pl+nmonths
